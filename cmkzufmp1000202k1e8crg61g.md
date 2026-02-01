@@ -1,7 +1,6 @@
 ---
 title: "What This Blog Is About — And How I’ll Be Explaining Tech Here"
 seoTitle: "Tech, Explained Simply – A Beginner-Friendly Tech Blog"
-seoDescription: "Tech, Explained Simply helps beginners understand modern tech concepts like APIs, Docker, and Linux using clear explanations and real-world analogies."
 datePublished: Thu Jan 29 2026 19:24:50 GMT+0000 (Coordinated Universal Time)
 cuid: cmkzufmp1000202k1e8crg61g
 slug: what-this-blog-is-about-and-how-ill-be-explaining-tech-here
