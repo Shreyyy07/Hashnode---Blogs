@@ -1,10 +1,11 @@
 ---
 title: "What Are Webhooks"
-seoTitle: "What Are Webhooks "
+seoTitle: "What Are Webhooks"
 datePublished: Thu Feb 05 2026 20:25:06 GMT+0000 (Coordinated Universal Time)
 cuid: cml9wo344000502jzfokehft8
 slug: what-are-webhooks
-ogImage: https://cdn.hashnode.com/res/hashnode/image/upload/v1770322836344/5f1020f9-8794-48d1-8c87-db1b5ea16ffc.jpeg
+cover: https://cdn.hashnode.com/res/hashnode/image/upload/v1770323385181/333029e4-e953-480b-87f0-17601b10001f.jpeg
+ogImage: https://cdn.hashnode.com/res/hashnode/image/upload/v1770323409862/6466e4a6-107e-4696-896b-1f64f42252cc.jpeg
 tags: apis, webhooks, software-engineering, system-design, backend-development, event-driven-architecture
 
 ---
