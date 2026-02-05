@@ -1,0 +1,216 @@
+---
+title: "What Are Webhooks"
+seoTitle: "What Are Webhooks "
+datePublished: Thu Feb 05 2026 20:25:06 GMT+0000 (Coordinated Universal Time)
+cuid: cml9wo344000502jzfokehft8
+slug: what-are-webhooks
+ogImage: https://cdn.hashnode.com/res/hashnode/image/upload/v1770322836344/5f1020f9-8794-48d1-8c87-db1b5ea16ffc.jpeg
+tags: apis, webhooks, software-engineering, system-design, backend-development, event-driven-architecture
+
+---
+
+## What Are Webhooks — And Why They Matter More Than You Think
+
+If you’ve spent any time learning backend development or working with integrations, you’ve definitely come across APIs.
+
+Frontend calls backend.  
+Backend talks to a third-party service.  
+A request goes out, a response comes back.
+
+That model feels clean and logical. Most tutorials stop there, and for a while, everything seems fine.
+
+But once you start building things that deal with real users, real money, and real networks, that clean mental model begins to crack.
+
+This post is about **why that crack exists** — and how webhooks quietly fix it.
+
+---
+
+## A brief pause on APIs
+
+At the simplest level, an API is a **structured way for one application to ask another application to do something**.
+
+Your application sends a request.  
+The other application processes it and responds.
+
+That’s the entire idea.
+
+If you want a deeper explanation of *why APIs exist* and how to think about them properly, you can read that here:  
+*What are APIs and why do they exist?*
+
+For now, just hold onto one important assumption that APIs make:
+
+APIs are **request-driven**.  
+Nothing happens unless you ask.
+
+That assumption works beautifully in controlled situations. It struggles in the real world.
+
+---
+
+## Where real systems start behaving differently than tutorials
+
+Let’s talk about a very common setup.
+
+You’re building an e-commerce application. Your frontend might be built with React or Angular. Your backend could be Spring Boot. For payments, you integrate Razorpay.
+
+A user places an order and clicks **Pay Now**. Your backend creates a payment by calling Razorpay’s API. The user completes the payment on Razorpay’s page, and Razorpay processes it.
+
+So far, everything follows the API mental model perfectly.
+
+Now pause for a moment and think about what can go wrong. The user’s internet drops right after payment. The browser tab closes. The mobile app crashes. The request times out somewhere between systems.
+
+Here’s the important part that most beginners don’t realize early:
+
+The payment can **still succeed on Razorpay’s side**, even if your application never receives the final confirmation. Razorpay now knows the payment is complete. Your system still thinks it’s pending. Both systems are technically behaving correctly — yet your data is wrong.
+
+This isn’t an edge case. This is normal behavior in distributed systems.
+
+---
+
+## Why “just calling the API again” isn’t a real solution
+
+A common instinct is to say, “Okay, then I’ll just keep checking.”
+
+So your backend keeps asking Razorpay:  
+“Is the payment done now?”  
+“Is it done now?”  
+“How about now?”
+
+This approach is called **polling**, and while it works in theory, it’s inefficient and fragile.
+
+You’re sending repeated requests even when nothing has changed. You’re wasting resources, adding latency, and still relying on timing guesses. It’s like checking your phone every 30 seconds to see if someone replied. You’ll eventually see the message — but it’s a terrible way to communicate.
+
+This is the exact gap webhooks were designed to fill.
+
+---
+
+## Why polling isn’t the only alternative
+
+Once developers realize that polling is inefficient, the next question usually is: “Why not just keep a connection open and push updates instantly?”
+
+And that’s a fair question.
+
+There are multiple ways systems try to stay updated, and each one solves a slightly different problem. Understanding this comparison helps webhooks feel *necessary*, not just convenient.
+
+Let’s slow this down.
+
+One common approach is **polling**, where the client keeps asking the server at regular intervals whether something has changed. It’s simple to build and easy to reason about, which is why beginners often start here. But the simplicity comes at a cost. Most requests return nothing new, wasting resources, and updates are always delayed until the next poll.
+
+Another approach is maintaining an **open connection**, commonly done using WebSockets. Here, the client and server stay connected continuously, allowing instant, two-way communication. This is powerful and works well for things like live chats or multiplayer games. But it’s also resource-heavy, harder to scale, and unnecessary for events that happen infrequently, like payments or order updates.
+
+Webhooks sit quietly between these two extremes.
+
+Instead of constantly asking or keeping a connection open, a webhook lets the server say, “I’ll call you when something actually happens.” No guessing. No waiting loops. No always-on connections.
+
+That’s why webhooks are such a natural fit for event-based systems.
+
+---
+
+## Comparing common communication approaches
+
+| Communication Method | How it works | When it feels easy | Where it breaks |
+| --- | --- | --- | --- |
+| **Polling (REST / HTTP)** | Client repeatedly asks the server for updates at fixed intervals | Very easy to implement and understand | Wastes resources, delayed updates, poor efficiency |
+| **Open Connection (WebSockets)** | Client and server keep a persistent two-way connection | Real-time communication like chat or live games | Resource-intensive, complex setup, harder to scale |
+| **Webhooks** | Server sends updates to a registered client URL when an event occurs | Event-based updates like payments, notifications, system events | Requires public endpoint, depends on HTTP delivery |
+
+---
+
+## The shift in thinking that webhooks introduce
+
+Webhooks flip the direction of communication. Instead of your application constantly asking for updates, the other system **notifies you when something important happens**.
+
+That’s the core idea. Webhooks are **event-driven**, not request-driven.
+
+You don’t keep asking: “Did the payment finish?”
+
+You say: “Tell me when the payment finishes.”
+
+That single shift solves an entire class of problems.
+
+---
+
+## How this actually works
+
+Let’s ground this in the Razorpay example again.
+
+Your backend tells Razorpay something like: “When a payment succeeds or fails, send the details to this URL on my server.” This URL is your **webhook endpoint**.
+
+From that point on, the flow looks very different from a pure API setup.
+
+The user initiates a payment using an API call. Razorpay processes the payment internally. When the payment is finally completed — whether immediately or after some delay — Razorpay **automatically sends a request** to your webhook endpoint. Your backend receives that request and updates the database accordingly.
+
+No browser involvement. No dependency on the client still being online. No guessing.
+
+Even if the user disappears entirely, your system still receives the truth.
+
+---
+
+## Why payments make webhooks unavoidable
+
+Payments are **asynchronous by nature**.
+
+They don’t always complete instantly. They don’t always fail cleanly. They don’t align neatly with a single request-response cycle. APIs assume that the moment you ask, you’ll immediately know the outcome.
+
+Real payments don’t work that way.
+
+Webhooks accept this reality. They allow systems to say, “I’ll let you know when I actually know.” That’s why payment gateways rely so heavily on them. Without webhooks, systems end up with stuck orders, mismatched payment states, manual reconciliation, and confused users.
+
+With webhooks, the backend becomes the single source of truth.
+
+---
+
+## What’s really happening in a robust system
+
+If you zoom out, a clean payment flow looks like this.
+
+Your backend uses APIs to **start** the payment. The payment gateway handles the messy real-world process. Webhooks are used to **confirm the final outcome**.
+
+  
+APIs initiate actions.  
+Webhooks report results.  
+They are not competitors — they’re complementary.
+
+Once you see this distinction, the confusion disappears.
+
+---
+
+## Why webhooks matter beyond payments
+
+Payments are just the easiest example to understand.
+
+The same pattern appears everywhere. GitHub uses webhooks to notify systems when code is pushed or pull requests are opened. Slack uses them to accept messages and notifications from external services.  
+Stripe uses them for subscriptions, refunds, disputes, and delayed payments.
+
+Anywhere something happens **outside your control and on its own timeline**, webhooks make systems reliable.
+
+---
+
+## The deeper reason webhooks exist
+
+Webhooks aren’t an advanced trick. They’re not something you “graduate to.” They exist because real systems are unreliable.
+
+Networks fail. Clients disconnect. Events don’t happen on demand. APIs are excellent for asking questions and starting work. They’re terrible at guaranteeing that you’ll know when something actually finished.
+
+Webhooks fill that gap.
+
+---
+
+## The real takeaway
+
+If webhooks ever felt confusing, it’s not because they’re complicated. It’s because most explanations jump straight into implementation without explaining the problem they solve.
+
+Once you understand that they’re simply **event notifications sent over HTTP**, everything clicks.
+
+APIs let systems talk.  
+Webhooks let systems listen.
+
+And modern software needs both.
+
+---
+
+**About the Author**
+
+*Shrey Joshi -* Breaking down complex concepts with clarity and context.
+
+[**LinkedIn**](https://www.linkedin.com/in/shrey-joshi-1b038a249/) | [**Medium**](https://medium.com/@learnwithshrey)  
+*Building* ***learn.with.Shrey***
