@@ -162,7 +162,7 @@ And all of it exists for one reason: To prevent waiting from freezing the system
 
 ---
 
-# Smooth Bridge to Part 2
+## Smooth Bridge to Part 2
 
 Everything we discussed so far happens inside one runtime. But what happens when:
 
