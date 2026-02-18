@@ -68,76 +68,205 @@ Now the flow changes. Instead of stopping the main execution, the long-running t
 
 ## The Real Architecture Behind Asynchronous JavaScript
 
-### Now comes the most misunderstood part — the Event Loop.
+Now comes the most misunderstood part — the **Event Loop**.
 
-JavaScript is single-threaded. There is only one main execution thread. So how does it manage non-blocking behavior? The answer lies in this architecture:
+Many people hear terms like “single-threaded” and immediately get confused. Let’s slow down and build this step by step. JavaScript is **single-threaded**. That means there is only **one main execution thread**. Only one piece of JavaScript code can run at a time.
 
-Call Stack  
-Web APIs / Background Workers  
-Callback Queue  
-Event Loop
+There aren’t multiple JavaScript threads running your code simultaneously. So the natural question is: If there’s only one thread… how does JavaScript handle long tasks like API calls or timers without freezing everything? The answer lies in the architecture around the JavaScript engine.
 
-Let’s visualize this flow:
+It’s not just “JavaScript running alone.”  
+It works together with the browser.
 
-1. Code runs on the Call Stack.
+And that architecture looks like this:
+
+* Call Stack
     
-2. When it encounters something like `fetch()` or `setTimeout()`, it delegates that task to the Web API.
+* Web APIs
     
-3. Once completed, the result is placed in the Callback Queue.
+* Callback Queue
     
-4. The Event Loop checks: “Is the Call Stack empty?”
+* Event Loop
     
-5. If yes, it pushes the next task from the queue into the stack.
-    
+
+Let’s understand each part properly.
 
 ---
 
-## Promises in the Flow Architecture
+## 1️⃣ The Call Stack — Where Your Code Runs
 
-Now let’s connect Promises to this architecture. When you write:
+The **Call Stack** is where JavaScript executes your code.
+
+When a function runs, it gets pushed onto the stack. When it finishes, it gets popped off. It works in a LIFO manner.
+
+For example:
 
 ```javascript
-fetch("https://api.example.com/users")
+function greet() {
+  console.log("Hello");
+}
+greet();
 ```
 
-The `fetch()` call:
+When `greet()` runs:
 
-* Immediately returns a Promise
+* It gets pushed onto the call stack.
     
-* Delegates the network operation to Web APIs
+* `console.log()` runs.
     
-* Continues execution
+* Then the function is removed from the stack.
     
 
-The Promise acts as a **contract** that says: “I will notify you when the result is ready.”
+As long as the code is synchronous, everything happens directly inside this call stack. But the moment JavaScript encounters something like:
+
+```javascript
+setTimeout(() => {
+  console.log("Done");
+}, 2000);
+```
+
+It behaves differently.
+
+---
+
+## 2️⃣ Web APIs — Where Long Tasks Are Handled
+
+When JavaScript sees `setTimeout()` or `fetch()`, it does **not** handle them inside the Call Stack.
+
+Instead, it delegates them to the browser’s **Web APIs**. Web APIs are provided by the browser (or Node.js runtime). They handle:
+
+* Timers (`setTimeout`, `setInterval`)
+    
+* Network requests (`fetch`)
+    
+* DOM events
+    
+
+So when you write:
+
+```javascript
+setTimeout(() => {
+  console.log("Done");
+}, 2000);
+```
+
+Here’s what happens:
+
+1. `setTimeout()` is pushed onto the Call Stack.
+    
+2. JavaScript tells the Web API: “Wait 2 seconds, then run this function.”
+    
+3. `setTimeout()` is removed from the Call Stack.
+    
+4. The Call Stack continues executing the next line of code.
+    
+
+The key point:
+
+The timer runs in the background — not inside the Call Stack. That’s how JavaScript avoids blocking.
+
+---
+
+## 3️⃣ Callback Queue — Waiting Area for Completed Tasks
+
+Now let’s say the 2 seconds are over. The Web API says: “Okay, the timer is done.”  
+But it cannot directly push the callback into the Call Stack.
+
+Why?
+
+Because the Call Stack might still be busy executing other code. So instead, the completed task is placed into something called the **Callback Queue**. Think of the Callback Queue as a waiting room. All completed asynchronous tasks wait there until JavaScript is ready to execute them.
+
+---
+
+## 4️⃣ The Event Loop — The Traffic Controller
+
+Now comes the most important piece: the **Event Loop**. The Event Loop constantly monitors two things:
+
+* Is the Call Stack empty?
+    
+* Is there something waiting in the Callback Queue?
+    
+
+If the Call Stack is empty, the Event Loop takes the first task from the Callback Queue and pushes it onto the Call Stack. Then that task executes.
+
+If the Call Stack is not empty, the Event Loop waits. It does not interrupt running code. It does not force parallel execution. It simply waits for the right moment to move tasks.
+
+That’s it.
+
+---
+
+## Let’s Visualize the Full Flow
+
+When you run this code:
+
+```javascript
+console.log("Start");
+
+setTimeout(() => {
+  console.log("Inside Timeout");
+}, 2000);
+
+console.log("End");
+```
+
+Here’s what happens step by step:
+
+1. `"Start"` is printed.
+    
+2. `setTimeout()` is delegated to Web APIs.
+    
+3. `"End"` is printed.
+    
+4. After 2 seconds, the callback moves to the Callback Queue.
+    
+5. The Event Loop waits for the Call Stack to be empty.
+    
+6. The callback is pushed to the Call Stack.
+    
+7. `"Inside Timeout"` is printed.
+    
+
+Output:
+
+```javascript
+Start
+End
+Inside Timeout
+```
+
+Even though the timeout was written before `"End"` in the code. This is asynchronous flow in action.
 
 ---
 
 ## async / await in Architecture Context
 
-When you use:
+When you write:
 
 ```javascript
 const response = await fetch(url);
 ```
 
-It looks synchronous, but architecturally nothing changes.
+It looks like JavaScript stops at that line and waits. But it doesn’t block the entire system. Behind the scenes, the same architecture is still working:
 
-The flow still goes:
+Call Stack → Web API → Queue → Event Loop → Call Stack
 
-Call Stack → Web API → Callback Queue → Event Loop → Call Stack
+Here’s what actually happens:
 
-The only difference is syntax readability.
+* `fetch(url)` is sent to the **Web API**.
+    
+* It immediately returns a **Promise**.
+    
+* `await` pauses only this function — not the whole program.
+    
+* The rest of JavaScript can continue running.
+    
+* When the request finishes, the result goes into a queue.
+    
+* The **Event Loop** moves it back to the Call Stack when it’s free.
+    
+* The paused function then resumes.
+    
 
----
-
-## Concurrency vs Parallelism — Visual Distinction
-
-To make this crystal clear: Concurrency Architecture:  
-Single thread managing multiple delegated tasks through event loop.
-
-Parallelism Architecture:  
-Multiple threads executing tasks simultaneously.
+So nothing about the architecture changes. `async/await` does not make JavaScript synchronous. It only makes asynchronous code easier to read. Under the hood, it still uses Promises and the Event Loop.
 
 ---
 
@@ -154,8 +283,6 @@ At this point, you should visually understand:
 * Promises = future value contract
     
 * async/await = readability layer
-    
-* Concurrency ≠ Parallelism
     
 
 And all of it exists for one reason: To prevent waiting from freezing the system.
