@@ -92,7 +92,7 @@ Let’s understand each part properly.
 
 ---
 
-## 1️⃣ The Call Stack — Where Your Code Runs
+## The Call Stack — Where Your Code Runs
 
 The **Call Stack** is where JavaScript executes your code.
 
@@ -128,7 +128,7 @@ It behaves differently.
 
 ---
 
-## 2️⃣ Web APIs — Where Long Tasks Are Handled
+## Web APIs — Where Long Tasks Are Handled
 
 When JavaScript sees `setTimeout()` or `fetch()`, it does **not** handle them inside the Call Stack.
 
@@ -166,7 +166,7 @@ The timer runs in the background — not inside the Call Stack. That’s how Jav
 
 ---
 
-## 3️⃣ Callback Queue — Waiting Area for Completed Tasks
+## Callback Queue — Waiting Area for Completed Tasks
 
 Now let’s say the 2 seconds are over. The Web API says: “Okay, the timer is done.”  
 But it cannot directly push the callback into the Call Stack.
@@ -177,7 +177,7 @@ Because the Call Stack might still be busy executing other code. So instead, the
 
 ---
 
-## 4️⃣ The Event Loop — The Traffic Controller
+## The Event Loop — The Traffic Controller
 
 Now comes the most important piece: the **Event Loop**. The Event Loop constantly monitors two things:
 
